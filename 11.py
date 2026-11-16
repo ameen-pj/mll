@@ -1,51 +1,58 @@
-from sklearn.datasets import load_iris
-from sklearn.svm import SVC
+import pandas as pd
+
+ds = pd.read_csv("./datasets/iris.csv")
+
+X = ds.iloc[:, [0, 1]]
+Y = ds.iloc[:, -1]
+Y = (Y == 0).astype(int)
+
+# print(Y)
+
+# print(ds)
+# print(ds.columns)
+
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+
+xtr, xte, ytr, ytrue = train_test_split(X, Y, test_size=0.2, random_state=42, stratify=Y)
+
+from sklearn.preprocessing import StandardScaler
+
+
+from sklearn.svm import SVC
+
+model = SVC(kernel='linear')
+model.fit(xtr, ytr)
+ypredict = model.predict(xte)
+
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+
+print(f"Acc : {accuracy_score(ytrue, ypredict)}")
+print(f"F1: {f1_score(ytrue, ypredict, average='weighted')}")
+print(f"Precision: {precision_score(ytrue, ypredict, average='weighted')}")
+print(f"Recall: {recall_score(ytrue, ypredict, average='weighted')}")
+
 import matplotlib.pyplot as plt
+
+print(model.coef_)
+print(model.intercept_)
+
+b = model.intercept_[0]
+w1 = model.coef_[0][0]
+w2 = model.coef_[0][1]
+
+# w1x1 + w2x2  + b = 0
+
 import numpy as np
 
-# Load dataset
-ds = load_iris()
 
-X = ds.data[:, :2]  # Use only first two features
-Y = (ds.target == 0).astype(int)
+x = np.linspace(X.iloc[:, 0].min(), X.iloc[:, 0].max(), 1000)
+y1 = (1 - (b + w1*x)) / w2
+y2 = (-1 - (b + w1*x)) / w2
+y3 = (-b -w1*x) / w2
 
-# Split dataset
-xtr, xte, ytr, yte = train_test_split(
-    X, Y, test_size=0.2, random_state=42, stratify=Y
-)
-
-# Train SVM
-classifier = SVC(kernel='linear', max_iter=1000)
-classifier.fit(xtr, ytr)
-
-# Predict and calculate accuracy
-ypr = classifier.predict(xte)
-print("Accuracy:", accuracy_score(yte, ypr))
-
-# Plot data points
-plt.scatter(X[:, 0], X[:, 1], c=Y, edgecolors='k')
-
-# Get decision boundary
-w1 = classifier.coef_[0][0]
-w2 = classifier.coef_[0][1]
-b = classifier.intercept_[0]
-
-# w1x1 + w2x2 + b = 0
-
-x = np.linspace(X[:, 0].min(), X[:, 0].max(), 100)
-
-db = (-b -w1*x) / w2
-mp = (1 - w1*x - b) / w2
-mn = (-1 - w1*x - b) / w2
-plt.plot(x, db, ls = '-', label='Decision Boundary')
-plt.plot(x, mp, ls = '--', label = '+ve Margin Boundary')
-plt.plot(x, mn, ls = '--', label = '-ve Margin Boundary')
-
-
-plt.xlabel("Sepal Length")
-plt.ylabel("Sepal Width")
-plt.title("Linear SVM Decision Boundary")
-plt.legend()
+plt.scatter(X.iloc[:, 0], X.iloc[:, 1], c = Y)
+plt.plot(x, y1)
+plt.plot(x, y2)
+plt.plot(x, y3)
 plt.show()
+

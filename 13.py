@@ -1,32 +1,34 @@
 import pandas as pd
-from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import StandardScaler  # Recommended for Neural Networks
 
-ds = pd.read_csv('./dataset/wine_quality.csv')
+ds = pd.read_csv("./datasets/wine_quality.csv")
+
+# print(ds)
+# print(ds.columns)
 
 X = ds.iloc[:, :-1]
 Y = ds.iloc[:, -1]
 
-xtr, xte, ytr, yte = train_test_split(X, Y, test_size=0.2, random_state=32)
+from sklearn.model_selection import train_test_split
 
-# 1. Scale features so all inputs are on a similar scale (mean=0, variance=1)
-scaler = StandardScaler()
-xtr_scaled = scaler.fit_transform(xtr)
-xte_scaled = scaler.transform(xte)
+xtr, xte, ytr, ytrue = train_test_split(X, Y, test_size = 0.2, stratify = Y)
 
-archs = [(5,), (10,), (5, 10,)]
-accs = []
+from sklearn.preprocessing import StandardScaler
 
-for arch in archs:
-    # 2. Added max_iter and random_state for reproducible, stable convergence
-    model = MLPClassifier(hidden_layer_sizes=arch, activation='tanh', max_iter=500, random_state=32)
-    model.fit(xtr_scaled, ytr)  # Train on scaled training data
-    ypr = model.predict(xte_scaled)  # Predict on scaled test data
+sc = StandardScaler()
+xtr = sc.fit_transform(xtr)
+xte = sc.transform(xte)
 
-    accs.append(accuracy_score(yte, ypr))
+from sklearn.neural_network import MLPClassifier
 
-# 3. Fixed zip order: arch comes first, then acc
-for arch, acc in zip(archs, accs):
-    print(f"Accuracy for architecture {arch}: {acc:.4f}")
+
+layers = [(5,), (5, 10, ), (20, 10, 5,)]
+
+accuracies = []
+
+from sklearn.metrics import accuracy_score
+
+for layer in layers:
+    model = MLPClassifier(hidden_layer_sizes=layer, max_iter=10000)
+    model.fit(xtr, ytr)
+    ypr = model.predict(xte)
+    print(f"{layer} : {accuracy_score(ytrue, ypr)}")

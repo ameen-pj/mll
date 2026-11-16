@@ -1,34 +1,48 @@
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.metrics import accuracy_score
 import pandas as pd
+
+ds = pd.read_csv("./datasets/OnlineRetail.csv", encoding='latin1')
+ds = ds.dropna()
+ds = ds[["InvoiceNo", 'StockCode', 'Quantity', 'UnitPrice', 'CustomerID']]
+ds['Amt'] = ds['Quantity'] * ds['UnitPrice']
+
+
+ds = ds.groupby(by='CustomerID').agg(
+        invoice_count=('InvoiceNo', 'nunique'),
+        stock_count=('StockCode', 'nunique'),
+        total_qty=('Quantity', 'sum'),
+        avg_unit_price=('UnitPrice', 'mean'),
+        amt_total=('Amt', 'sum')
+)
+
+threshold = ds['amt_total'].quantile(0.80)
+
+ds["target"] = (ds['amt_total'] >= threshold).astype(int)
+ds = ds.drop(columns=['amt_total'])
+
+
+from sklearn.model_selection import train_test_split
+
+X = ds.iloc[:, :-1]
+Y = ds.iloc[:, -1]
+
+xtr, xte, ytr, ytrue = train_test_split(X, Y, test_size = 0.2)
+
+
+from sklearn.tree import DecisionTreeClassifier, plot_tree
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('./dataset/OnlineRetail.csv', encoding='latin1')
-df = df.dropna(subset=['CustomerID'])
-df['TotalPrice'] = df['Quantity'] * df['UnitPrice']
-# Aggregate per customer
-customers = df.groupby('CustomerID').agg(
-    NumOrders    = ('InvoiceNo',  'nunique'),
-    NumItems     = ('Quantity',   'sum'),
-    AvgUnitPrice = ('UnitPrice',  'mean'),
-    TotalSpend   = ('TotalPrice', 'sum')
-)
-# Target: Low / Medium / High value segment
-customers['Segment'] = pd.qcut(customers['TotalSpend'], q=3, labels=['Low', 'Medium', 'High'])
-X = customers[['NumOrders', 'NumItems', 'AvgUnitPrice']]
-y = customers['Segment']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-model = DecisionTreeClassifier(criterion="entropy", max_depth=3, random_state=42)
-model.fit(X_train, y_train)
-y_pred = model.predict(X_test)
-print(f"Accuracy = {accuracy_score(y_test, y_pred):.4f}\n")
+model = DecisionTreeClassifier(max_depth=3)
+model.fit(xtr , ytr)
+ypredict = model.predict(xte)
 
-for feature, importance in zip(X.columns, model.feature_importances_):
-    print(f"{feature}: {importance:.4f}")
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
-plt.figure(figsize=(24, 10))
-plot_tree(model, feature_names=X.columns, class_names=['Low', 'Medium', 'High'], filled=True, fontsize=9)
-plt.title("Decision Tree - Customer Segmentation (ID3 / Entropy)")
+print(f"Acc : {accuracy_score(ytrue, ypredict)}")
+print(f"F1: {f1_score(ytrue, ypredict, average='weighted')}")
+print(f"Precision: {precision_score(ytrue, ypredict, average='weighted')}")
+print(f"Recall: {recall_score(ytrue, ypredict, average='weighted')}")
+plot_tree(model, feature_names=X.columns, class_names=['Not High Value', 'High Value'])
+
+
 plt.show()

@@ -1,37 +1,32 @@
-from time import time
 import pandas as pd
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, f1_score, recall_score
 
-ds = pd.read_csv('./dataset/mnist.csv')
+ds = pd.read_csv("./datasets/fashion_mnist.csv")
+ds = ds.dropna()
 
-X = ds.iloc[:, 1: -1]
+# print(ds)
+# print(ds.columns)
+
+X = ds.iloc[:, 1:] / 255.0
 Y = ds.iloc[:, 0]
 
-x_train, x_test, y_train, y_test = train_test_split(X, Y, random_state=42, test_size=.2)
+from sklearn.model_selection import train_test_split
 
-kvals = [3,5,7]
-accuracies = []
-training_times = []
-f1 = []
-recall = []
+xtr, xte, ytr, ytrue = train_test_split(X, Y, test_size = 0.2)
 
+from sklearn.preprocessing import StandardScaler
 
-for k in kvals:
-    knn = KNeighborsClassifier(n_neighbors=k)
-    start = time()
-    knn.fit(x_train, y_train)
-    stop = time()
-    y_pred = knn.predict(x_test)
-    accuracies.append(accuracy_score(y_test, y_pred))
-    training_times.append(stop - start)
-    f1.append(f1_score(y_test, y_pred, average='weighted'))
-    recall.append(recall_score(y_test, y_pred, average='weighted'))
+sc = StandardScaler()
+xtr = sc.fit_transform(xtr)
+xte = sc.transform(xte)
 
-# Print the accuracies for each k value
-for k, accuracy in zip(kvals, accuracies):
-    
-    print(f'Accuracy for k={k}: {accuracy:.4f} Training time: {training_times[kvals.index(k)]:.4f} seconds')
-    print(f'F1 Score for k={k}: {f1[kvals.index(k)]:.4f}')
-    print(f'Recall for k={k}: {recall[kvals.index(k)]:.4f}')
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+
+model = KNeighborsClassifier()
+model.fit(xtr, ytr)
+ypredict = model.predict(xte)
+
+print(f"Acc : {accuracy_score(ytrue, ypredict)}")
+print(f"F1: {f1_score(ytrue, ypredict, average='weighted')}")
+print(f"Precision: {precision_score(ytrue, ypredict, average='weighted')}")
+print(f"Recall: {recall_score(ytrue, ypredict, average='weighted')}")

@@ -1,23 +1,33 @@
 import pandas as pd
-from sklearn.neural_network import MLPClassifier
+
+ds = pd.read_csv("./datasets/mnist.csv")
+
+#print(ds)
+#print(ds.columns)
+
+X = ds.iloc[:, 1:] / 255.0
+Y = ds.iloc[:, 0]
+
 from sklearn.model_selection import train_test_split
 
-ds = pd.read_csv('./dataset/fashion_mnist.csv', low_memory=False)
+xtr, xte, ytr, ytrue = train_test_split(X, Y, test_size = 0.2, stratify = Y)
+
+from sklearn.preprocessing import StandardScaler
+
+sc = StandardScaler()
+xtr = sc.fit_transform(xtr)
+xte = sc.transform(xte)
+
+from sklearn.neural_network import MLPClassifier
 
 
-X = ds.iloc[:100, 1:].astype(float) / 255.0
-Y = ds.iloc[:100, 0]
-
-xtr, xte, ytr, yte = train_test_split(X, Y, random_state=32, test_size=0.2)
-
-activation_functions = ['identity', 'logistic', 'tanh', 'relu']
-for activation in activation_functions:
-    mlp = MLPClassifier(hidden_layer_sizes=(100,), activation=activation, max_iter=5, random_state=42)
-    mlp.fit(xtr, ytr)
-    accuracy = mlp.score(xte, yte)
-    print(f'Activation function: {activation}, Accuracy: {accuracy:.4f}')
+act = ['logistic', 'relu', 'tanh']
 
 
+from sklearn.metrics import accuracy_score
 
-
-
+for a in act:
+    model = MLPClassifier(hidden_layer_sizes=(5, 3, ), activation=a)
+    model.fit(xtr, ytr)
+    ypr = model.predict(xte)
+    print(f"{a} : {accuracy_score(ytrue, ypr)}")

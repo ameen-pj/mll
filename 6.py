@@ -1,37 +1,44 @@
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
 import pandas as pd
 
-dataset = pd.read_csv('./dataset/diabetes.csv')
-
-X = dataset.iloc[:, :-1]
-Y = dataset.iloc[:, -1]
-
-x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size = 0.2, random_state = 42)
-
-lr = LogisticRegression(max_iter=1000)
-
-print("---- Without Feature Scaling -----")
-
-lr.fit(x_train, y_train)
-y_predict = lr.predict(x_test)
-
-print(classification_report(y_test, y_predict))
+ds = pd.read_csv("./datasets/pimadiabetes.csv")
 
 
-print("---- Feature Scaling -----")
-
-scaler = StandardScaler()
-
-x_train_scaled = scaler.fit_transform(x_train)
-x_test_scaled = scaler.transform(x_test)
+X = ds.iloc[:, :-1]
+Y = ds.iloc[:, -1]
 
 
-lr = LogisticRegression(max_iter=1000)
+from sklearn.model_selection import train_test_split
 
-lr.fit(x_train_scaled, y_train)
-y_predict = lr.predict(x_test_scaled)
+xtr, xte, ytr, ytrue =  train_test_split(X, Y, test_size = 0.2)
 
-print(classification_report(y_test, y_predict))
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+
+lr = LogisticRegression(max_iter=100000)
+lr.fit(xtr, ytr)
+ypredict = lr.predict(xte)
+
+print("-- LR without Feature Scaling --")
+print(f"Acc : {accuracy_score(ytrue, ypredict)}")
+print(f"F1: {f1_score(ytrue, ypredict, average='weighted')}")
+print(f"Precision: {precision_score(ytrue, ypredict, average='weighted')}")
+print(f"Recall: {recall_score(ytrue, ypredict, average='weighted')}")
+
+from sklearn.preprocessing import StandardScaler
+
+sc = StandardScaler()
+
+xtr = sc.fit_transform(xtr)
+xte = sc.transform(xte)
+
+lr = LogisticRegression(max_iter=100000)
+lr.fit(xtr, ytr)
+ypredict = lr.predict(xte)
+
+
+print("-- LR with Feature Scaling --")
+print(f"Acc : {accuracy_score(ytrue, ypredict)}")
+print(f"F1: {f1_score(ytrue, ypredict, average='weighted')}")
+print(f"Precision: {precision_score(ytrue, ypredict, average='weighted')}")
+print(f"Recall: {recall_score(ytrue, ypredict, average='weighted')}")
+

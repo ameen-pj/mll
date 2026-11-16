@@ -1,34 +1,47 @@
-import pandas as pd 
+import pandas as pd
+
+ds = pd.read_csv("./datasets/20newsgroups.csv")
+ds = ds.dropna()
+
+# print(ds)
+# print(ds.columns)
+
+X = ds['text']
+Y = ds['category']
+
 from sklearn.model_selection import train_test_split
+
+xtr, xte, ytr, ytrue = train_test_split(X, Y, test_size = 0.2)
+
 from sklearn.feature_extraction.text import CountVectorizer
+
+cv = CountVectorizer(stop_words='english')
+
+
+xtr = cv.fit_transform(xtr)
+xte = cv.transform(xte)
+
+
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
-df = pd.read_csv("./dataset/20newsgroups.csv")
-X = df["text"].fillna("") 
-y = df["category"]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+model = MultinomialNB()
+model.fit(xtr, ytr)
+ypredict = model.predict(xte)
 
-vectorizer_multi = CountVectorizer()
-X_train_multi = vectorizer_multi.fit_transform(X_train)
-X_test_multi = vectorizer_multi.transform(X_test)
+print("-- MultinomialNB --")
+print(f"Acc : {accuracy_score(ytrue, ypredict)}")
+print(f"F1: {f1_score(ytrue, ypredict, average='weighted')}")
+print(f"Precision: {precision_score(ytrue, ypredict, average='weighted')}")
+print(f"Recall: {recall_score(ytrue, ypredict, average='weighted')}")
 
-multi = MultinomialNB() 
-multi.fit(X_train_multi, y_train)
-y_pred_multi = multi.predict(X_test_multi)
 
-print("Multinomial Naive Bayes")
-print(f"Accuracy: {accuracy_score(y_test, y_pred_multi)}")
-print(f"F1 Score: {f1_score(y_test, y_pred_multi, average='weighted')}")
+model = BernoulliNB()
+model.fit(xtr, ytr)
+ypredict = model.predict(xte)
 
-vectorizer_binary = CountVectorizer()
-X_train_binary = vectorizer_binary.fit_transform(X_train)
-X_test_binary = vectorizer_binary.transform(X_test)
-
-bernoulli = BernoulliNB() 
-bernoulli.fit(X_train_binary, y_train)
-y_pred_binary = bernoulli.predict(X_test_binary)
-
-print("\nBernoulli Naive Bayes")
-print(f"Accuracy: {accuracy_score(y_test, y_pred_binary)}")
-print(f"F1 Score: {f1_score(y_test, y_pred_binary, average='weighted')}")
+print("-- MultinomialNB --")
+print(f"Acc : {accuracy_score(ytrue, ypredict)}")
+print(f"F1: {f1_score(ytrue, ypredict, average='weighted')}")
+print(f"Precision: {precision_score(ytrue, ypredict, average='weighted')}")
+print(f"Recall: {recall_score(ytrue, ypredict, average='weighted')}")

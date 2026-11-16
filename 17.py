@@ -1,26 +1,24 @@
 import pandas as pd
-from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
-from sklearn.metrics import silhouette_score
 
-ds = pd.read_csv('./dataset/digits.csv')
+ds = pd.read_csv("./datasets/digits.csv", header=None)
 
 X = ds.iloc[:, :-1]
-Y = ds['target']
 
 
-clusters = [3, 5, 7, 9]
+from sklearn.preprocessing import StandardScaler
 
-sc = []
-inertia = []
+X = StandardScaler().fit_transform(X)
 
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 
-for i,cluster in enumerate(clusters):
-    km = KMeans(n_clusters = cluster, max_iter=300)
-    labels = km.fit_predict(X, Y)
-    sc.append(silhouette_score(X, labels))
-    inertia.append(km.inertia_)
+cluster_sizes = [3, 5, 7, 9]
 
+for cluster in cluster_sizes:
+    model = KMeans(n_clusters = cluster)
+    label = model.fit_predict(X)
+    print(f" Cluster Size => {cluster}")
+    print(f" Silhouette Score = {silhouette_score(X, label)}")
+    print(f" Inertia = {model.inertia_}")
 
-for s, i in zip( sc, inertia):
-    print(f"SC : {s} | Inertia : {i}")
+# print(ds)

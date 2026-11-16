@@ -1,33 +1,42 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.cluster import AgglomerativeClustering, KMeans
+
+ds = pd.read_csv("./datasets/Mall_Customers.csv")
+
+print(ds.columns)
+print(ds)
+
+X = ds.iloc[:, :]
+
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+
+X["Genre"] = LabelEncoder().fit_transform(X["Genre"])
+
+X = StandardScaler().fit_transform(X)
+
+from sklearn.cluster import KMeans, AgglomerativeClustering
+
+model1 = KMeans()
+label1 = model1.fit_predict(X)
+
+
+model2 = AgglomerativeClustering()
+label2 = model2.fit_predict(X)
+
 from sklearn.metrics import silhouette_score
 
-ds = pd.read_csv('./dataset/Mall_Customers.csv')
-
-X = ds.iloc[:, 3:]
-Y = ds.iloc[:, -1]
-
-kmeans = KMeans()
-labels = kmeans.fit_predict(X)
-
-print("Inertia:", kmeans.inertia_)
-print("Silhouette Score:", silhouette_score(X, labels))
+print("-- KMeans --")
+print(f"Inertia : {model1.inertia_}")
+print(f"SC: {silhouette_score(X, label1)}")
 
 
-acluster = AgglomerativeClustering(n_clusters=5)
-a_labels = acluster.fit_predict(X)
-print("Agglomerative Clustering Silhouette Score:", silhouette_score(X, a_labels))
+print("-- Agglomerative Clustering --")
+print(f"SC: {silhouette_score(X, label2)}")
 
-plt.subplot(1, 2, 1)
-plt.scatter(X.iloc[:, 0], X.iloc[:, 1], c=labels)
-plt.xlabel("Annual Income (k$)")
-plt.ylabel("Spending Score (1-100)")
+import matplotlib.pyplot as plt
 
-
-plt.subplot(1, 2, 2)
-plt.scatter(X.iloc[:, 0], X.iloc[:, 1], c=labels)
-plt.xlabel("Annual Income (k$)")
-plt.ylabel("Spending Score (1-100)")
-
+plt.subplot(1,2, 1)
+plt.scatter(X[:,3], X[:,4], c = label1)
+plt.subplot(1,2, 2)
+plt.scatter(X[:,3], X[:, 4], c = label2)
+plt.tight_layout()
 plt.show()
